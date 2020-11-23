@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import json
+import random
 import re
 import sys
 
@@ -94,6 +95,13 @@ class Vers:
         self.book = book
         self.chapter = chapter
         self.line = line
+
+    def __str__(self):
+        if self.chapter:
+            return "{} {},{}".format(
+                book_mapping[self.book], self.chapter, self.line)
+        else:
+            return "{} {}".format(book_mapping[self.book, self.line])
         
 
 def enter_vers():
@@ -177,6 +185,22 @@ def print_list(vers_dict):
                 else:
                     print("    [ ] {}".format(line))
 
+def random_vers(vers_dict):
+    unlearned_verses = []
+    for book_name, book in vers_dict.items():
+        if book_name in one_chapter_books:
+            for vers_number, learned in book.items():
+                if not learned:
+                    unlearned_verses.append(Vers(book_name, None, vers_number))
+        else:
+            for chapter_number, chapter in book.items():
+                for vers_number, learned in chapter.items():
+                    if not learned:
+                        unlearned_verses.append(
+                            Vers(book_name, chapter_number, vers_number))
+    vers_index = random.randint(0, len(unlearned_verses))
+    print(unlearned_verses[vers_index])
+
 while True:
     print("Wähle eine Operation aus:")
     print("(0) Programm beenden")
@@ -185,9 +209,12 @@ while True:
     print("(3) Stelle als gelernt markieren")
     print("(4) Vers aus System löschen")
     print("(5) Statistik")
+    print("(6) Zufälligen Vers lernen")
     
     op = input("Operation: ")
 
+    if op not in ["0","1","2","3","4","5","6",]:
+        continue
     if op == "0":
         sys.exit(0)
     else:
@@ -195,6 +222,8 @@ while True:
             vers_dict = json.load(fp)
         if op == "1":
             print_list(vers_dict)
+        elif op == "6":
+            random_vers(vers_dict)
         else:
             vers = enter_vers()
             if not vers:
@@ -205,9 +234,6 @@ while True:
                 mark_vers(vers_dict, vers)
             elif op == "4":
                 delete_vers(vers_dict, vers)
-            else:
-                print("Unknown operation")
-                sys.exit(1)
             with open("verse.json", "w") as fp:
                 json.dump(vers_dict, fp)
     print("")
